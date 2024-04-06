@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Aptos } from "@aptos-labs/ts-sdk";
 import { useWallet, InputTransactionData } from "@aptos-labs/wallet-adapter-react";
+import { WalletSelector } from "@aptos-labs/wallet-adapter-ant-design";
+import "@aptos-labs/wallet-adapter-ant-design/dist/index.css";
 
 export const aptos = new Aptos();
 export const moduleAddress = "0x6da8662f79d90b694b882858f2bd37282ac7fd933b61dd8bb2f6d0fd1d46e438";
@@ -162,6 +164,7 @@ function Aptosint() {
 
   return (
     <>
+       <WalletSelector />
       {!accountHasList ? (
         <div>
           <button disabled={!account} onClick={addNewList}>
