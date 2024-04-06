@@ -3,20 +3,20 @@ import { Aptos } from "@aptos-labs/ts-sdk";
 import { useWallet, InputTransactionData } from "@aptos-labs/wallet-adapter-react";
 
 export const aptos = new Aptos();
-export const moduleAddress = "0x880bf4602b8bcc1a3587d4e138e91cb9d961e8a081b94ba101ef6a3798516f0b";
+export const moduleAddress = "0x6da8662f79d90b694b882858f2bd37282ac7fd933b61dd8bb2f6d0fd1d46e438";
 
-type Nft = {
+type Task = {
   address: string;
-  lease_completed: boolean;
+  completed: boolean;
   content: string;
-  nft_id: string;
+  task_id: string;
 };
 
 function Aptosint() {
   const [accountHasList, setAccountHasList] = useState<boolean>(false);
   const { account, signAndSubmitTransaction } = useWallet();
   const [transactionInProgress, setTransactionInProgress] = useState<boolean>(false);
-  const [tasks, setTasks] = useState<Nft[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState<string>("");
 
   const onWriteTask = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,25 +31,25 @@ function Aptosint() {
   const fetchList = async () => {
     if (!account) return [];
     try {
-      const nftListResource = await aptos.getAccountResource({
+      const todoListResource = await aptos.getAccountResource({
         accountAddress: account?.address,
-        resourceType: `${moduleAddress}::nft::NftList`
+        resourceType: `${moduleAddress}::todolist::TodoList`
       });
       setAccountHasList(true);
       // tasks table handle
-      const tableHandle = nftListResource.tasks.handle;
+      const tableHandle = todoListResource.tasks.handle;
       // tasks table counter
-      const taskCounter = nftListResource.task_counter;
+      const taskCounter = todoListResource.task_counter;
 
       let tasks = [];
       let counter = 1;
       while (counter <= taskCounter) {
         const tableItem = {
           key_type: "u64",
-          value_type: `${moduleAddress}::nft::Nft`,
+          value_type: `${moduleAddress}::todolist::Task`,
           key: `${counter}`
         };
-        const task = await aptos.getTableItem<Nft>({ handle: tableHandle, data: tableItem });
+        const task = await aptos.getTableItem<Task>({ handle: tableHandle, data: tableItem });
         tasks.push(task);
         counter++;
       }
@@ -66,7 +66,7 @@ function Aptosint() {
 
     const transaction: InputTransactionData = {
       data: {
-        function: `${moduleAddress}::nft::create_nft_list`,
+        function: `${moduleAddress}::todolist::create_list`,
         functionArguments: []
       }
     };
@@ -89,20 +89,20 @@ function Aptosint() {
     setTransactionInProgress(true);
     const transaction: InputTransactionData = {
       data: {
-        function: `${moduleAddress}::nft::create_nft`,
+        function: `${moduleAddress}::todolist::create_task`,
         functionArguments: [newTask]
       }
     };
 
-    // hold the latest task.nft_id from our local state
-    const latestId = tasks.length > 0 ? parseInt(tasks[tasks.length - 1].nft_id) + 1 : 1;
+    // hold the latest task.task_id from our local state
+    const latestId = tasks.length > 0 ? parseInt(tasks[tasks.length - 1].task_id) + 1 : 1;
 
     // build a newTaskToPush object into our local state
     const newTaskToPush = {
       address: account.address,
-      lease_completed: false,
+      completed: false,
       content: newTask,
-      nft_id: latestId + "",
+      task_id: latestId + "",
     };
 
     try {
@@ -132,7 +132,7 @@ function Aptosint() {
     setTransactionInProgress(true);
     const transaction: InputTransactionData = {
       data: {
-        function: `${moduleAddress}::nft::complete_nft`,
+        function: `${moduleAddress}::todolist::complete_task`,
         functionArguments: [taskId]
       }
     };
@@ -145,9 +145,9 @@ function Aptosint() {
 
       setTasks((prevState) => {
         const newState = prevState.map((task) => {
-          // if nft_id equals the lease_completed taskId, update lease_completed property
-          if (task.nft_id === taskId) {
-            return { ...task, lease_completed: true };
+          // if task_id equals the completed taskId, update completed property
+          if (task.task_id === taskId) {
+            return { ...task, completed: true };
           }
           return task;
         });
@@ -165,27 +165,27 @@ function Aptosint() {
       {!accountHasList ? (
         <div>
           <button disabled={!account} onClick={addNewList}>
-            Add new NFT
+            Add new list
           </button>
         </div>
       ) : (
         <div>
           <input
             onChange={(event) => onWriteTask(event)}
-            placeholder="Add a Nft"
+            placeholder="Add a Task"
             value={newTask}
           />
-          <button onClick={onTaskAdded}>Mint</button>
+          <button onClick={onTaskAdded}>Add</button>
           {tasks && (
             <ul>
               {tasks.map((task) => (
-                <li key={task.nft_id}>
-                  {task.lease_completed ? (
-                    <span>{task.content} - lease_completed</span>
+                <li key={task.task_id}>
+                  {task.completed ? (
+                    <span>{task.content} - Completed</span>
                   ) : (
                     <div>
-                      {/* <span>{task.content}</span> */}
-                      <button onClick={() => completeTask(task.nft_id)}>Complete</button>
+                      <span>{task.content}</span>
+                      <button onClick={() => completeTask(task.task_id)}>Complete</button>
                     </div>
                   )}
                 </li>
