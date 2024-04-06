@@ -1,0 +1,15 @@
+[package]
+name = "move"
+version = "1.0.0"
+authors = []
+
+[addresses]
+nft_addr = '880bf4602b8bcc1a3587d4e138e91cb9d961e8a081b94ba101ef6a3798516f0b'
+[dev-addresses]
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-core.git"
+rev = "mainnet"
+subdir = "aptos-move/framework/aptos-framework"
+
+[dev-dependencies]
